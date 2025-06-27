@@ -3,15 +3,14 @@ import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import TestList from '@/components/TestList';
+import { Toaster } from 'sonner';
 
 const Index = () => {
-  // Simulamos un estado de usuario
-  const [userRole, setUserRole] = useState<'guest' | 'student' | 'owner' | 'editor' | 'admin'>('student');
+  const [userRole, setUserRole] = useState<'guest' | 'student' | 'owner' | 'editor' | 'admin'>('owner');
   const [userName] = useState('Juan Pérez');
 
   const handleCreateTest = () => {
     console.log('Crear nuevo test');
-    // Aquí iría la lógica para navegar al editor de tests
   };
 
   return (
@@ -65,6 +64,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <Toaster position="top-right" richColors />
     </div>
   );
 };

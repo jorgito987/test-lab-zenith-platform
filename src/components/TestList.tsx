@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import TestCard from './TestCard';
+import PdfUploader from './PdfUploader';
 import { Search, Filter, Plus } from 'lucide-react';
 
 interface Test {
@@ -20,6 +20,13 @@ interface Test {
   isOwner: boolean;
 }
 
+interface Question {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+
 interface TestListProps {
   userRole?: 'guest' | 'student' | 'owner' | 'editor' | 'admin';
   onCreateTest?: () => void;
@@ -32,6 +39,8 @@ const TestList: React.FC<TestListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
+  const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
+  const [showUploader, setShowUploader] = useState(false);
 
   // Datos de ejemplo
   const sampleTests: Test[] = [
@@ -129,6 +138,11 @@ const TestList: React.FC<TestListProps> = ({
 
   const canCreateTests = ['owner', 'editor', 'admin'].includes(userRole);
 
+  const handleTestGenerated = (questions: Question[]) => {
+    setGeneratedQuestions(questions);
+    setShowUploader(false);
+  };
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -144,16 +158,64 @@ const TestList: React.FC<TestListProps> = ({
           </div>
           
           {canCreateTests && (
-            <Button
-              onClick={onCreateTest}
-              size="lg"
-              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Crear Test
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setShowUploader(!showUploader)}
+                size="lg"
+                variant="outline"
+                className="border-primary-200 text-primary-700 hover:bg-primary-50"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Subir PDF
+              </Button>
+              <Button
+                onClick={onCreateTest}
+                size="lg"
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Crear Test
+              </Button>
+            </div>
           )}
         </div>
+
+        {/* PDF Uploader */}
+        {showUploader && canCreateTests && (
+          <PdfUploader onTestGenerated={handleTestGenerated} />
+        )}
+
+        {/* Generated Questions Display */}
+        {generatedQuestions.length > 0 && (
+          <div className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-green-200">
+            <h3 className="text-xl font-semibold text-green-800 mb-4">
+              Test Generado ({generatedQuestions.length} preguntas)
+            </h3>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {generatedQuestions.map((question, index) => (
+                <div key={question.id} className="p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    {index + 1}. {question.question}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {question.options.map((option, optionIndex) => (
+                      <div
+                        key={optionIndex}
+                        className={`p-2 rounded text-sm ${
+                          optionIndex === question.correctIndex
+                            ? 'bg-green-200 text-green-800 font-medium'
+                            : 'bg-white text-gray-700'
+                        }`}
+                      >
+                        {String.fromCharCode(65 + optionIndex)}. {option}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border p-6 mb-8">
