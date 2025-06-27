@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import TestCard from './TestCard';
 import PdfUploader from './PdfUploader';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Filter, Plus, CheckCircle, XCircle } from 'lucide-react';
 
 interface Test {
   id: string;
@@ -139,8 +139,17 @@ const TestList: React.FC<TestListProps> = ({
   const canCreateTests = ['owner', 'editor', 'admin'].includes(userRole);
 
   const handleTestGenerated = (questions: Question[]) => {
+    console.log('Test generado con', questions.length, 'preguntas');
     setGeneratedQuestions(questions);
     setShowUploader(false);
+    
+    // Scroll to generated questions
+    setTimeout(() => {
+      document.getElementById('generated-test')?.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
   };
 
   return (
@@ -153,7 +162,7 @@ const TestList: React.FC<TestListProps> = ({
               Tests Disponibles
             </h2>
             <p className="text-lg text-gray-600">
-              Explora nuestra colección de {sampleTests.length} tests educativos
+              Explora nuestra colección de {sampleTests.length} tests educativos o genera uno desde tu PDF
             </p>
           </div>
           
@@ -162,19 +171,23 @@ const TestList: React.FC<TestListProps> = ({
               <Button
                 onClick={() => setShowUploader(!showUploader)}
                 size="lg"
-                variant="outline"
-                className="border-primary-200 text-primary-700 hover:bg-primary-50"
+                variant={showUploader ? "default" : "outline"}
+                className={showUploader 
+                  ? "bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600" 
+                  : "border-primary-200 text-primary-700 hover:bg-primary-50"
+                }
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Subir PDF
+                {showUploader ? 'Ocultar Subida' : 'Subir PDF'}
               </Button>
               <Button
                 onClick={onCreateTest}
                 size="lg"
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 shadow-lg hover:shadow-xl transition-all duration-300"
+                variant="outline"
+                className="border-secondary-200 text-secondary-700 hover:bg-secondary-50"
               >
                 <Plus className="h-5 w-5 mr-2" />
-                Crear Test
+                Crear Manual
               </Button>
             </div>
           )}
@@ -187,32 +200,58 @@ const TestList: React.FC<TestListProps> = ({
 
         {/* Generated Questions Display */}
         {generatedQuestions.length > 0 && (
-          <div className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-green-200">
-            <h3 className="text-xl font-semibold text-green-800 mb-4">
-              Test Generado ({generatedQuestions.length} preguntas)
-            </h3>
+          <div id="generated-test" className="mb-8 p-6 bg-white rounded-xl shadow-sm border border-green-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-green-800 flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Test Generado ({generatedQuestions.length} preguntas)
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setGeneratedQuestions([])}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Cerrar
+              </Button>
+            </div>
+            
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {generatedQuestions.map((question, index) => (
-                <div key={question.id} className="p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">
+                <div key={question.id} className="p-4 bg-green-50 rounded-lg border border-green-100">
+                  <h4 className="font-medium text-gray-900 mb-3">
                     {index + 1}. {question.question}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {question.options.map((option, optionIndex) => (
                       <div
                         key={optionIndex}
-                        className={`p-2 rounded text-sm ${
+                        className={`p-3 rounded-md text-sm transition-colors ${
                           optionIndex === question.correctIndex
-                            ? 'bg-green-200 text-green-800 font-medium'
-                            : 'bg-white text-gray-700'
+                            ? 'bg-green-200 text-green-800 font-medium border border-green-300'
+                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
                         }`}
                       >
-                        {String.fromCharCode(65 + optionIndex)}. {option}
+                        <span className="font-semibold mr-2">
+                          {String.fromCharCode(65 + optionIndex)}.
+                        </span>
+                        {option}
+                        {optionIndex === question.correctIndex && (
+                          <CheckCircle className="inline h-4 w-4 ml-2 text-green-600" />
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800">
+                <strong>¡Test listo!</strong> Puedes usar estas preguntas para crear un test completo. 
+                Las respuestas correctas están marcadas en verde.
+              </p>
             </div>
           </div>
         )}
